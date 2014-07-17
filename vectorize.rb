@@ -1,15 +1,17 @@
 #!/usr/bin/env ruby
 
 require 'chunky_png'
+require 'parallel'
 
 # These produce nice even tile sizes, but they are oddly shaped
-TILE_SIZE_X = 25
-TILE_SIZE_Y = 12
+TILE_SIZE_X = 5 #* 5
+TILE_SIZE_Y = 6 #* 2
 
 COMPONENTS = %i(r g b)
 
-Dir['data/*.png'].each do |file|
-  p file
+files = Dir['data/*.png']
+
+Parallel.each(files) do |file|
   png = ChunkyPNG::Image.from_file(file)
   width = png.width
   height = png.height
@@ -37,6 +39,6 @@ Dir['data/*.png'].each do |file|
     end
   end
 
-  File.open('vectors.csv', 'a') { |f| f.puts out_row.join(',') }
+  File.open(file.gsub(/data/, 'vectors').gsub(/png/, 'txt'), 'w') { |f| f.puts out_row.join(',') }
   out_png.save(file.gsub(/data/, 'thumb.color'))
 end
