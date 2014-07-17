@@ -28,7 +28,7 @@ end
 out_png = ChunkyPNG::Image.new(tiles.length, tiles.first.length)
 tiles.each_with_index do |rows, x|
   rows.each_with_index do |tile, y|
-    out_png[x, y] = ChunkyPNG::Color.rgb(*COMPONENTS.map { |c| tile[c] / tile[:count] })
+    out_png[x, y] = ChunkyPNG::Color.to_grayscale ChunkyPNG::Color.rgb(*COMPONENTS.map { |c| tile[c] / tile[:count] })
   end
 end
 
