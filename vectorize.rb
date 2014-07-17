@@ -6,27 +6,30 @@ require 'chunky_png'
 TILE_SIZE_X = 25
 TILE_SIZE_Y = 12
 
+COMPONENTS = %i(r g b)
+
 png = ChunkyPNG::Image.from_blob(ARGF.read)
-
-
 width = png.width
 height = png.height
 
-puts
-tile_start_x = 0
-while tile_start_x < width
+tiles = (0...(width / TILE_SIZE_X)).map { |x| (0...(height / TILE_SIZE_Y)).map { |y| Hash[[[:count, 0]] + (COMPONENTS.map { |c| [c, 0] })] } }
 
-  tile_start_y = 0
-  while tile_start_y < height
-    tile_end_x = [tile_start_x + TILE_SIZE_X, width].min
-    tile_end_y = [tile_start_y + TILE_SIZE_Y, height].min
+png.pixels.each_with_index do |pixel, index|
+  x = index % width
+  y = index / width
+  x_tile = x / TILE_SIZE_X
+  y_tile = y / TILE_SIZE_Y
 
-    # Process this tile
-    print "[#{tile_start_x}, #{tile_start_y}]<->[#{tile_end_x}, #{tile_end_y}], "
-
-    tile_start_y += TILE_SIZE_Y
-  end
-
-  tile_start_x += TILE_SIZE_X
+  tile = tiles[x_tile][y_tile]
+  COMPONENTS.each { |c| tile[c] += ChunkyPNG::Color.send(c, pixel) }
+  tile[:count] += 1
 end
-puts
+
+out_png = ChunkyPNG::Image.new(tiles.length, tiles.first.length)
+tiles.each_with_index do |rows, x|
+  rows.each_with_index do |tile, y|
+    out_png[x, y] = ChunkyPNG::Color.rgb(*COMPONENTS.map { |c| tile[c] / tile[:count] })
+  end
+end
+
+out_png.save('avg.png')
